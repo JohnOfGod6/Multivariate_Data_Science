@@ -1,0 +1,691 @@
+---
+title: Direct and indirect determinants of childhood malaria morbidity among children
+  under the age of five.
+author: "Group_5"
+date: "2025-02-06"
+output:
+  pdf_document: default
+  html_document: default
+  
+  
+Godwin KLUTSE
+Denyse AKAYEZU
+Aldino MATSIMBE
+Salam Musa DAHIA
+Alan Ambros KAMARA
+Jean De Dieu NGIRINSHUTI
+Veronica Adhiambo OCHIENG
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# setting working directory
+
+```{r}
+rm(list=ls())
+basedir <- "D:/OneDrive/Master's Class notes/AIMS Rwanda - Mathematical Sciences - Epidemiology/Review Phase/Malaria Data Science/Group Assignment"
+knitr::opts_knit$set(root.dir = basedir)
+```
+
+# loading the necessary libraries
+
+```{r}
+library(haven)
+library(dplyr)
+library(kableExtra)
+library(dplyr)
+library(finalfit)
+library(writexl)
+library(ggplot2)
+library(ggpubr)
+library(tidyr)
+library(broom)
+library(epiR)
+library(knitr)
+```
+
+# loading the data
+
+```{r}
+Data <- read_sav("Rwanda_Data/HH Members/RWPR81FL.sav")
+```
+
+
+# Selecting the variables for the analysis
+
+```{r}
+selected_vars <- c("HHID", "HV002", "HV013", "HV014", "HV024", "HV025", "HV201", "HV202", "HV204", "HV213", "HV214", "HV215", "HV227", "HV228", "HV235", "HV270", "HML2", "SH104A", "HC1", "HC27", "HC53", "HC57", "HC68", "HML20", "HML32", "HML35")
+```
+
+# Subsetting the data
+
+```{r}
+child_malaria <- Data[,selected_vars]
+```
+
+# Recoding the categorical variables
+```{r}
+# Recoding the variable HV024
+child_malaria <- mutate(child_malaria, HV024 = case_when(
+  HV024 == 1 ~ "Kigali", HV024 == 2 ~ "South", HV024 == 3 ~ "West",
+  HV024 == 4 ~ "North", HV024 == 5 ~ "East"
+))
+
+# Recoding the variable HV025
+child_malaria <- mutate(child_malaria, HV025 = case_when(
+  HV025 == 1 ~ "Urban", HV025 == 2 ~ "Rural"
+))
+
+# Recoding the variable HV201
+child_malaria <- mutate(child_malaria, HV201 = case_when(
+  HV201 == 10 ~ "PIPED WATER", HV201 == 11 ~ "Piped into dwelling",  HV201 == 12 ~ "Piped to yard/plot", HV201 == 13 ~ "Piped to neighbor",
+   HV201 == 14 ~ "Public tap/standpipe", HV201 == 20 ~ "TUBE WELL WATER",  HV201 == 21 ~ "Tube well or borehole", HV201 == 30 ~ "DUG WELL (OPEN/PROTECTED)", HV201 == 31 ~ "Protected well", HV201 == 32 ~ "Unprotected well", HV201 == 40 ~ "SURFACE FROM SPRING", HV201 == 41 ~ "Protected spring", HV201 == 41 ~ "Unprotected spring", HV201 == 42 ~ "Unprotected spring", HV201 == 43 ~ "River/dam/lake/ponds/stream/canal/irrigation channel", HV201 == 51 ~ "Rainwater", HV201 == 61 ~ "Tanker truck", HV201 == 62 ~ "Cart with small tank", HV201 == 71 ~ "Bottled water", HV201 == 96 ~ "Other"
+))
+
+# Recoding the variable HV202
+child_malaria <- mutate(child_malaria, HV202 = case_when(
+  HV202 == 10 ~ "PIPED WATER", HV202 == 11 ~ "Piped into dwelling",  HV202 == 12 ~ "Piped to yard/plot", HV202 == 13 ~ "Piped to neighbor",
+   HV202 == 14 ~ "Public tap/standpipe", HV202 == 20 ~ "TUBE WELL WATER",  HV202 == 21 ~ "Tube well or borehole", HV202 == 30 ~ "DUG WELL (OPEN/PROTECTED)", HV202 == 31 ~ "Protected well", HV202 == 32 ~ "Unprotected well", HV202 == 40 ~ "SURFACE FROM SPRING", HV202 == 41 ~ "Protected spring", HV202 == 41 ~ "Unprotected spring", HV202 == 42 ~ "Unprotected spring", HV202 == 43 ~ "River/dam/lake/ponds/stream/canal/irrigation channel", HV202 == 51 ~ "Rainwater", HV202 == 61 ~ "Tanker truck", HV202 == 62 ~ "Cart with small tank", HV202 == 71 ~ "Bottled water", HV202 == 96 ~ "Other"
+))
+
+# Recoding the variable HV204
+child_malaria <- mutate(child_malaria, HV204 = case_when(
+  HV204 == 996 ~ "On premises", HV204 == 998 ~ "Don't know"
+))
+
+# Recoding the variable HV213
+child_malaria <- mutate(child_malaria, HV213 = case_when(
+  HV213 == 10 ~ "NATURAL",  HV213 == 11 ~ "Earth/sand",  HV213 == 12 ~ "Dung",  HV213 == 20 ~ "RUDIMENTARY",  HV213 == 21 ~ "Wood planks",
+  HV213 == 22 ~ "Bricks without cement",  HV213 == 30 ~ "FINISHED",  HV213 == 31 ~ "Parquet or polished wood",  HV213 == 32 ~ "Vinyl or asphalt strips",  HV213 == 33 ~ "Ceramic tiles/coastal brick",  HV213 == 34 ~ "Cement",  HV213 == 35 ~ "Carpet",  HV213 == 96 ~ "Other"
+))
+
+# Recoding the variable HV214
+child_malaria <- mutate(child_malaria, HV214 = case_when(
+  HV214 == 10 ~ "NATURAL",  HV214 == 11 ~ "Cane/palm/trunks",  HV214 == 20 ~ "RUDIMENTARY",  HV214 == 21 ~ "Bamboo/tree trunks with mud",  HV214 == 22 ~ "Stone with mud",  HV214 == 23 ~ "Uncovered adobe",  HV214 == 24 ~ "Reused wood",  HV214 == 25 ~ "Plastic sheeting",  HV214 == 30 ~ "FINISHED",
+  HV214 == 31 ~ "Tree trunks with mud and cement",  HV214 == 32 ~ "Stone with lime/cement",  HV214 == 33 ~ "Oven fired bricks",  HV214 == 34 ~ "Oven fired bricks with cement",  HV214 == 35 ~ "Cement block",  HV214 == 36 ~ "Covered adobe with cement",  HV214 == 37 ~ "Wood planks/shingles",  HV214 == 96 ~ "Other"
+))
+
+# Recoding the variable HV215
+child_malaria <- mutate(child_malaria, HV215 = case_when(
+  HV215 == 10 ~ "NATURAL",  HV215 == 11 ~ "No roof",  HV215 == 12 ~ "Thatch/palm leaf",  HV215 == 20 ~ "RUDIMENTARY",  HV215 == 21 ~ "Rustic material/plastic",  HV215 == 30 ~ "FINISHED",  HV215 == 31 ~ "Metal sheet",  HV215 == 32 ~ "Calamine/cement fiber",  HV215 == 33 ~ "Ceramic tiles",
+  HV215 == 34 ~ "Cement/concrete",  HV215 == 35 ~ "Industrial tiles",  HV215 == 96 ~ "Other"
+))
+
+# Recoding the variable HV227
+child_malaria <- mutate(child_malaria, HV227 = case_when(
+  HV227 == 0 ~ "No",
+  HV227 == 1 ~ "Yes"
+))
+
+# Recoding the variable HV228
+child_malaria <- mutate(child_malaria, HV228 = case_when(
+  HV228 == 0 ~ "No",
+  HV228 == 1 ~ "All children",
+  HV228 == 2 ~ "Some children",
+  HV228 == 2 ~ "No net in the household"
+))
+
+# Recoding the variable HV235
+child_malaria <- mutate(child_malaria, HV235 = case_when(
+  HV235 == 1 ~ "In own dwelling",
+  HV235 == 2 ~ "In own yard/plot",
+  HV235 == 3 ~ "Elsewhere"
+))
+
+# Recoding the variable HV270
+child_malaria <- mutate(child_malaria, HV270 = case_when(
+  HV270 == 1 ~ "Poorest",
+  HV270 == 2 ~ "Poorer",
+  HV270 == 3 ~ "Middle",
+  HV270 == 4 ~ "Richer",
+  HV270 == 5 ~ "Richest"
+))
+
+# Recoding the variable SH104A
+child_malaria <- mutate(child_malaria, SH104A = case_when(
+  SH104A == 1 ~ "Less than 200 meters",
+  SH104A == 2 ~ "200 - 500 meters",
+  SH104A == 3 ~ "More than 500 meters",
+  SH104A == 8 ~ "Don't know"
+))
+
+# Recoding the variable HC27
+child_malaria <- mutate(child_malaria, HC27 = case_when(
+  HC27 == 1 ~ "Male",
+  HC27 == 2 ~ "Female"
+))
+
+# Recoding the variable HC56
+child_malaria <- mutate(child_malaria, HC56 = case_when(
+  HC53 == 997 ~ "Inconsistent",
+  HC53 == 999 ~ "Missing"
+))
+
+# Recoding the variable HC57
+child_malaria <- mutate(child_malaria, HC57 = case_when(
+  HC57 == 1 ~ "Severe",
+  HC57 == 2 ~ "Moderate",
+  HC57 == 3 ~ "Mild",
+  HC57 == 4 ~ "Not anemic",
+  HC57 == 9 ~ "Missing"
+))
+
+# Recoding the variable HC68
+child_malaria <- mutate(child_malaria, HC68 = case_when(
+  HC68 == 0 ~ "No education",
+  HC68 == 1 ~ "Primary",
+  HC68 == 2 ~ "Secondary",
+  HC68 == 3 ~ "Higher",
+  HC68 == 8 ~ "Don't know",
+  HC68 == 9 ~ "Missing"
+))
+
+# Recoding the variable HML20
+child_malaria <- mutate(child_malaria, HML20 = case_when(
+  HML20 == 0 ~ "No",
+  HML20 == 1 ~ "Yes"
+))
+
+# Recoding the variable HML32
+child_malaria <- mutate(child_malaria, HML32 = case_when(
+  HML32 == 0 ~ "Negative",
+  HML32 == 1 ~ "Positive",
+  HML32 == 6 ~ "Test undetermined",
+  HML32 == 7 ~ "Sample not found in lab database"
+))
+
+# Recoding the variable HML35
+child_malaria <- mutate(child_malaria, HML35 = case_when(
+  HML35 == 0 ~ "Negative",
+  HML35 == 1 ~ "Positive",
+  HML35 == 3 ~ "No present",
+  HML35 == 4 ~ "Refused",
+  HML35 == 6 ~ "Other"
+))
+
+```
+
+
+# 2. Select the variables for each research objective (Topic) 
+```{r}
+# removing variables that are not significant to the sudy
+var_to_drop <- c("HV201","HV202", "HV213", "HV214", "HV215", "MHC53", "HC53", "HC56", "HV202")
+child_malaria <- child_malaria[ , !(names(child_malaria) %in% var_to_drop)]
+```
+
+# 3. Merge the two or more variables in the modules 
+
+# Data manipulation
+   
+```{r}
+# Create the new variable malaria_result
+child_malaria <- child_malaria %>%
+  mutate(malaria_result = if_else(HML35 == "Positive", "1", "0"))
+
+child_malaria <- child_malaria %>%
+  mutate(malaria_result = factor(malaria_result, 
+                                 levels = c(1, 0), 
+                                 labels = c("Positive", "Negative")))
+
+table(child_malaria$malaria_result)
+# Grouping child_age into age groups (in months)
+child_malaria <- child_malaria %>%
+  mutate(child_age_group = cut(HC1, 
+                               breaks = c(0, 11, 23, 35, 47, 59), 
+                               labels = c("0-11 Months", "12-23 Months", "24-35 Months", "36-47 Months", "48-59 Months"),
+                               include.lowest = TRUE))
+
+
+# Regrouping the wealth index into new categories
+
+child_malaria <- child_malaria %>%
+  mutate(
+    wealth_index = case_when(
+      HV270 == "Poorest" ~ "Poor",
+      HV270 == "Poorer" ~ "Poor",
+      HV270 == "Middle" ~ "Middle",
+      HV270 == "Richer" ~ "Rich",
+      HV270 == "Richest" ~ "Rich",
+      TRUE ~ NA_character_
+    ),
+    wealth_index = factor(wealth_index, levels = c("Poor", "Middle", "Rich"))
+  )
+
+# Grouping number of children under 5 year
+child_malaria <- child_malaria %>%
+  mutate(Child_U5_number = cut(HV014, 
+                               breaks = c(0, 1, 2, 3, 4, 5), 
+                               labels = c("1", "2", "3", "4","5 and more"),
+                               include.lowest = TRUE))
+
+# Grouping size of the household
+child_malaria <- child_malaria %>%
+  mutate(HH_size = cut(HV013, 
+                       breaks = c(0, 3, 6, 10, Inf),  
+                       labels = c("0-3 members", "4-6 members", "7-10 members", "10+ members"), 
+                       include.lowest = TRUE))  
+
+# Grouping size of the household
+child_malaria <- child_malaria %>%
+  mutate(Child_net = cut(HML2, 
+                         breaks = c(-Inf, 0, 1, 2, 3, 4, 5, Inf),  # -Inf ensures 0 is its own category
+                         labels = c("None", "1", "2", "3", "4", "5", "5+"), 
+                         include.lowest = TRUE))
+
+```
+
+
+```{r}
+# Removing cases/observations with where we have 0 number of children as well as 0 for household members
+child_data <- child_malaria %>% filter(!is.na(HC1))
+table(child_data$malaria_result)
+table(child_data$wealth_index)
+```
+
+   
+
+## Eploratory Data Analysis(Child Malaria)
+
+```{r}
+summary(child_data)  # General summary of all variables
+```
+
+```{r}
+# Frequency distribution of malaria test results
+table(child_data$malaria_result, useNA = "no")
+prop.table(table(child_data$malaria_result, useNA = "no"))
+
+# Bar plot excluding NA and adding proportions to each bar
+ggplot(drop_na(child_data, malaria_result), aes(x = malaria_result)) +
+  geom_bar(aes(y = ..count..), fill = "#FBE7C6") +  # Bar plot with counts
+  geom_text(stat = "count", aes(label = scales::percent(..count../sum(..count..))), vjust = -0.5) +
+  labs(title = "Distribution of Malaria Test Results", x = "Malaria Test Result", y = "Frequency") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))  # Center title
+
+                            
+```
+
+
+
+```{r}
+# Example: Analysis of child's sex
+table(child_data$HC27, useNA = "no")
+prop.table(table(child_data$HC27, useNA = "no"))
+
+ggplot(drop_na(child_data, HC27, malaria_result), aes(x = HC27, fill = malaria_result)) +
+  geom_bar(position = "dodge") +
+  geom_text(
+    stat = "count", 
+    aes(label = scales::percent(..count.. / sum(..count..))), 
+    position = position_dodge(width = 0.8),  
+    vjust = -0.5
+  ) +
+  labs(title = "Malaria Test Results by Child's Sex", x = "Child's Sex", y = "Frequency") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+  
+```
+
+
+```{r}
+# Example: Relationship between wealth index and malaria
+ggplot(drop_na(child_data, wealth_index, malaria_result), aes(x = wealth_index, fill = malaria_result)) +
+  geom_bar(position = "dodge") +
+  geom_text(
+    stat = "count", 
+    aes(label = scales::percent(..count.. / sum(..count..))), 
+    position = position_dodge(width = 0.8),  
+    vjust = -0.5
+  ) +
+  labs(title = "Malaria Test Results by household wealth index", x = "Household wealth index", y = "Frequency") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+
+```{r}
+# Example: Relationship between household size and malaria
+ggplot(drop_na(child_data, HH_size, malaria_result), aes(x = HH_size, fill = malaria_result)) +
+  geom_bar(position = "dodge") +
+  geom_text(
+    stat = "count", 
+    aes(label = scales::percent(..count.. / sum(..count..))), 
+    position = position_dodge(width = 0.8),  
+    vjust = -0.5
+  ) +
+  labs(title = "Malaria Test Results by Child's Sex", x = "Child's Sex", y = "Frequency") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+ggplot(drop_na(child_data, HV025, malaria_result), aes(x = HV025, fill = malaria_result)) +
+  geom_bar(position = "fill") +  # Stacked proportions
+  geom_text(
+    stat = "count", 
+    aes(label = scales::percent(..count.. / sum(..count..))), 
+    position = position_fill(vjust = 0.5),  
+    size = 3 
+  ) +
+  labs(title = "Malaria Prevalence by Residence Type", x = "Residence", y = "Proportion") +
+  theme_minimal()
+
+```
+
+
+```{r}
+
+ggplot(drop_na(child_data, HC57, malaria_result), aes(x = HC57, fill = malaria_result)) +
+  geom_bar(position = "fill") +
+  labs(title = "Malaria Prevalence by Anemia Severity", x = "Anemia Severity", y = "Proportion") +
+  theme_minimal()
+
+```
+
+
+
+
+```{r}
+independ_vars <- c("HV013", "HV014", "HV024", "HV025","HV227", "HV228", "HV235", "HV270", "HML2", "SH104A","HC1",  "HC27", "HC57", "HC68", "HML20","child_age_group", "wealth_index","Child_U5_number","HH_size", "HV204")
+v_dep <- "malaria_result"
+# Generate summary statistics
+salam <- child_data |> 
+  summary_factorlist(
+    dependent = v_dep, 
+    explanatory = independ_vars, 
+    p = TRUE, 
+    p_cont_para = 'aov', 
+    p_cat = 'chisq', 
+    add_dependent_label = FALSE,
+    cont = "mean", 
+    total_col = FALSE, 
+    add_col_totals = TRUE, 
+    add_row_totals = TRUE,
+    na_include = TRUE, 
+    na_to_p = FALSE,
+    na_to_prop = FALSE,
+    include_col_totals_percent = FALSE
+  )
+
+# Export the results to an Excel file
+writexl::write_xlsx(
+  salam, 'lan.xlsx')
+
+# Create a formatted table
+salam |> 
+  kable(caption = "Summary Table") |> 
+  kable_styling() |> 
+  kable_classic(lightable_options = c('striped', 'hover'))
+```
+
+
+# Univariate analysis
+
+
+```{r}
+# Fit the model
+model2 <- glm(malaria_result ~ child_age_group, 
+                family = binomial(), data = child_data)
+# View the model summary
+summary(model2)
+
+table1 <- model2 |> 
+  tbl_regression(exponentiate = TRUE, 
+                 label = list(child_age_group ~ "Age of child")) |> 
+  bold_labels() |> 
+  bold_p()
+
+# Convert the table to a data frame
+table_df <- as.data.frame(table1)
+
+# Save the table as an Excel file
+write.xlsx(table_df, file = "table1.xlsx")
+```
+
+```{r}
+# Fit the model
+model2 <- glm(malaria_result ~ wealth_index, 
+                family = binomial(), data = child_data)
+# View the model summary
+summary(model2)
+
+table1 <- model2 |> 
+  tbl_regression(exponentiate = TRUE, 
+                 label = list(wealth_index ~ "Wealth index")) |> 
+  bold_labels() |> 
+  bold_p()
+
+# Convert the table to a data frame
+table_df <- as.data.frame(table1)
+
+# Save the table as an Excel file
+write.xlsx(table_df, file = "table1.xlsx")
+```
+
+```{r}
+# Fit the model
+model3 <- glm(malaria_result ~ HV228, 
+                family = binomial(), data = child_data)
+# View the model summary
+summary(model3)
+
+table1 <- model3 |> 
+  tbl_regression(exponentiate = TRUE, 
+                 label = list(HV228 ~ "Children slept under bednet")) |> 
+  bold_labels() |> 
+  bold_p()
+
+
+# Convert the table to a data frame
+table_df <- as.data.frame(table1)
+
+# Save the table as an Excel file
+write.xlsx(table_df, file = "table1.xlsx")
+
+```
+
+
+```{r}
+# Fit the model
+model3 <- glm(malaria_result ~ HV227, 
+                family = binomial(), data = child_data)
+# View the model summary
+summary(model3)
+
+
+table1 <- model3 |> 
+  tbl_regression(exponentiate = TRUE, 
+                 label = list(HV227 ~ "Use of bed net")) |> 
+  bold_labels() |> 
+  bold_p()
+
+
+# Convert the table to a data frame
+table_df <- as.data.frame(table1)
+
+# Save the table as an Excel file
+write.xlsx(table_df, file = "table1.xlsx")
+
+```
+
+```{r}
+# Fit the model
+model3 <- glm(malaria_result ~ HV025, 
+                family = binomial(), data = child_data)
+# View the model summary
+summary(model3)
+
+
+table1 <- model3 |> 
+  tbl_regression(exponentiate = TRUE, 
+                 label = list(HV025 ~ "Place of residence")) |> 
+  bold_labels() |> 
+  bold_p()
+
+
+# Convert the table to a data frame
+table_df <- as.data.frame(table1)
+
+# Save the table as an Excel file
+write.xlsx(table_df, file = "table1.xlsx")
+
+```
+
+```{r}
+# Fit the model
+model3 <- glm(malaria_result ~ HML20, 
+                family = binomial(), data = child_data)
+# View the model summary
+summary(model3)
+
+
+table1 <- model3 |> 
+  tbl_regression(exponentiate = TRUE, 
+                 label = list(HML20 ~ "Person slept under an LLIN net")) |> 
+  bold_labels() |> 
+  bold_p()
+
+
+# Convert the table to a data frame
+table_df <- as.data.frame(table1)
+
+# Save the table as an Excel file
+write.xlsx(table_df, file = "table1.xlsx")
+
+```
+
+
+```{r}
+# Fit the model
+model3 <- glm(malaria_result ~ HC68, 
+                family = binomial(), data = child_data)
+# View the model summary
+summary(model3)
+
+
+table1 <- model3 |> 
+  tbl_regression(exponentiate = TRUE, 
+                 label = list(HC68 ~ "Mothers education level")) |> 
+  bold_labels() |> 
+  bold_p()
+
+
+# Convert the table to a data frame
+table_df <- as.data.frame(table1)
+
+# Save the table as an Excel file
+write.xlsx(table_df, file = "table1.xlsx")
+
+```
+
+```{r}
+# Fit the model
+model3 <- glm(malaria_result ~ HC57, 
+                family = binomial(), data = child_data)
+# View the model summary
+summary(model3)
+
+
+table1 <- model3 |> 
+  tbl_regression(exponentiate = TRUE, 
+                 label = list(HC57 ~ "Anemia level")) |> 
+  bold_labels() |> 
+  bold_p()
+
+
+# Convert the table to a data frame
+table_df <- as.data.frame(table1)
+
+# Save the table as an Excel file
+write.xlsx(table_df, file = "table1.xlsx")
+
+```
+
+
+
+```{r}
+library(gtsummary)
+model1 |> 
+  tbl_regression(exponentiate = TRUE, 
+                 label = list(child_age_group ~ "Age of child",
+                              wealth_index ~ "Wealth index",
+                              HV228 ~ "Children slept under bednet",
+                              HV227 ~ "Use of bed net",
+                              HV025 ~ "Place of residence",
+                              HML20 ~ "Person slept under an LLIN net",
+                              HC68 ~ "Mothers education level",
+                              HC57 ~ "Anemia level")) |> 
+  bold_labels() |> 
+  bold_p()
+
+
+# Convert the table to a data frame
+table_df <- as.data.frame(table)
+
+# Save the table as an Excel file
+write.xlsx(table_df, file = "table.xlsx")
+
+```
+
+```{r}
+library(gtsummary)
+model1 |> 
+  tbl_regression(exponentiate = TRUE, 
+                 label = list(child_age_group ~ "Age of child",
+                              wealth_index ~ "Wealth index",
+                              HV228 ~ "Children slept under bednet",
+                              HV227 ~ "Use of bed net",
+                              HV025 ~ "Place of residence",
+                              HML20 ~ "Person slept under an LLIN net",
+                              HC68 ~ "Mothers education level",
+                              HC57 ~ "Anemia level")) |> 
+  bold_labels() |> 
+  bold_p()
+
+
+# Convert the table to a data frame
+table_df <- as.data.frame(table)
+
+# Save the table as an Excel file
+write.xlsx(table_df, file = "table.xlsx")
+
+```
+
+
+# Multivariate analysis
+
+```{r}
+model1 <- glm(malaria_result ~ child_age_group+ wealth_index + HV227 + HML20 + HC68 + HV025 + HC57, 
+                family = binomial(), data = child_data)
+# View the model summary
+summary(model1)
+```
+
+```{r}
+library(gtsummary)
+library(openxlsx)
+table2 <- model1 |> 
+  tbl_regression(exponentiate = TRUE, 
+                 label = list(child_age_group ~ "Age of child",
+                              wealth_index ~ "Wealth index",
+                              HV228 ~ "Children slept under bednet",
+                              HV227 ~ "Use of bed net",
+                              HV025 ~ "Place of residence",
+                              HML20 ~ "Person slept under an LLIN net",
+                              HC68 ~ "Mothers education level",
+                              HC57 ~ "Anemia level")) |> 
+  bold_labels() |> 
+  bold_p()
+
+
+# Convert the table to a data frame
+table_df <- as.data.frame(table2)
+
+# Save the table as an Excel file
+write.xlsx(table_df, file = "table2.xlsx")
+
+```
