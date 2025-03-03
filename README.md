@@ -15,7 +15,7 @@ It involves
 - **Clustering:** K-Means and hierarchical clustering reveal group structures within the data
 - **Factor Analysis:** Identifies latent variables affecting observed patterns
 
-## 🛠 How to Run the Code
+## How to Run the Code
 1. Install required packages in R
    ```r
    install.packages(c("ggplot2", "dplyr", "factoextra", "cluster"))
